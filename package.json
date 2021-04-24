@@ -1,0 +1,27 @@
+{
+  "name": "zenn",
+  "description": "personal zenn articles",
+  "version": "1.0.0",
+  "author": "ulwlu <ooulwluoo@gmail.com> (https://ulwlu.netlify.app)",
+  "bugs": {
+    "url": "https://github.com/ulwlu/zenn/issues"
+  },
+  "homepage": "https://github.com/ulwlu/zenn",
+  "keywords": [],
+  "license": "MIT",
+  "main": "",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ulwlu/zenn.git"
+  },
+  "dependencies": {
+    "zenn-cli": "^0.1.79"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "^0.27.1"
+  },
+  "scripts": {
+    "mlint": "markdownlint articles/*"
+  }
+}
