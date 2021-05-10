@@ -1,0 +1,30 @@
+{
+  "title": "Qiita/Github/Googleのユーザーネームを変えたときの影響まとめ",
+  "closed": false,
+  "archived": false,
+  "created_at": "2021-01-14",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-14",
+      "body_updated_at": "2021-02-03",
+      "body_markdown": "**経緯**：他の男の人の名前をユーザーネームにふざけて刻んで、惰性でずっとそのまま使ってたがその人と疎遠になって2年くらい経ってたので断捨離を決意した(2020/10)。結構影響範囲調べたが、まとまった情報がなかったので記事にした。\n\n**概要**：リダイレクト充実してるので影響全くなかった。唯一のデメリットは「はてブのカウントが止まる」、「contribution graphのカウントがリセットされる」という二点だけ。\n\n**単語**：\n- Tracked Repository: 追跡中のリポジトリ。verboseオプションで参照できる。何かのOSSのコアコントリビューターだったりすると増えてく。ユーザーネーム変えるとポインタは当然変わる・・・のだがGithubは自動でリダイレクトしてくれて手動変更の必要がない。\n- Commit Author: Commiterではなく、Commit Authorの方(--pretty=fullとかで違いは見れる)。Github上でのCommit履歴のiconだったりContributors Graphは、Authorに設定されたメールアドレスからユーザーを探し出して表示している(COVID19のCOCOAでなりすましコミッターが爆誕してちょっと話題になってたやつ)。なのでこれが変わるとそれまでのCommitのiconがnouserになったり、Graphからは消える。実害ないけど無理矢理直すなら`git filter-branch -f --env-filter \"GIT_AUTHOR_EMAIL='nyan@nyan.com'\" HEAD`やってforce pushするしかないと思う（やってないから未確証）"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-14",
+      "body_markdown": "# Qiita\n\nQiitaはユーザーネームがfirst slugに来る。\n\n旧：https://qiita.com/WANWAN/***\n新：https://qiita.com/NYANNYAN/***\n\nだとして、\n\n## リダイレクトしてくれるもの\n- 記事\n- 質問\n\n## リダイレクトしてくれないもの\n- ユーザーページ\n- ・・・とか、記事＆質問以外すべて。コメント履歴とかLGTMした記事とかもリダイレクトしてくれない。\n\n## 影響\n- 記事や質問のダイレクトリンクはリダイレクトしてくれるので影響なし\n- ユーザーページのダイレクトリンクは切れる。\n- はてブのカウントは前のURLと別になっちゃうので止まる"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-14",
+      "body_markdown": "# Github\n\nGithubはすべてリダイレクトしてくれる。神かっ・・・\n\n旧：https://github.com/WANWAN\n新：https://github.com/NYANNYAN\n\nだとして、\n\n## リダイレクトしてくれるもの\n- すべてのページへのアクセス\n- リポジトリのcloneやtracked repositoryへのアクセス（sshもhttpsも）\n\n## リダイレクトしてくれないもの\n- 多分無い\n\n## 影響\n- 実用ではほぼない\n- 昔の名前でやってたcommitはnouser時のアイコンになってしまう。contributors graphも昔の名前でやってたものとは別扱いになる。\n- Qiita同様はてブカウントは止まる\n\n"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-14",
+      "body_updated_at": "2021-01-14",
+      "body_markdown": "# Google\n\nこれはもう新規アカウントを作るのですべて変わる。\nOauthの設定と、連携してるソシャゲは一旦全部メモした方がよい（アナザーエデンのデータ全部消えた）"
+    }
+  ]
+}

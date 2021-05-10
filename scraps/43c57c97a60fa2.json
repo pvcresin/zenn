@@ -1,0 +1,54 @@
+{
+  "title": "HTTPちゃんとわかってるかメモ",
+  "closed": false,
+  "archived": false,
+  "created_at": "2021-01-25",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_updated_at": "2021-01-25",
+      "body_markdown": "**概要**：HTTPの基礎知識を復習\n\n**単語**：\n- **RFC**: 「RFC」という単語そのものは何個もの意味を含む。\n  - [1] **インターネット標準化過程を経てインターネット標準になった技術的資料(仕様、ルールなど)**: これが最も一般的な意味で使われるRFCである。カテゴリは「RFC STD(標準)」。通常STD番号が割り当てられるので`RFC1704`みたいな数字が付いてたら標準化されてると思っていい。\n  - [2] **標準化過程の技術的資料**: 実はこちらの方が多い。「PS(提唱)」「DS(草稿)」の２つのフェーズがある。DSから[1]のSTDに昇格するには最低４ヶ月の期間経過と、最低１回のIETFミーティングの開催、かつ十分な実績がなければならない。例えばHTTP2は、2015年に標準化された時点でこの世界の68%以上のリクエストを占めていた。\n  - [3] **標準化に全く関係ないRFC**: 「情報(Info)」「実験(Exp)」「歴史(Hist)」「現状(BCP)」。こいつらがついてたらほぼ標準化と関係ないので、ただRFCと一言にいっても注意が必要。とくにExpとHistは推奨されない内容の議論がされている場合もある。\n  - **RFCの略語の意味**: RFCは「Request for Comments」。なんでそう呼ばれてるかというとRFCはRFC自体を決める議論を行うシステムでもあるから。上記でいうと　Expなどが良い例。\n- **HTTP/0.9**: 1989-1991にCERNのTim Barners LeeがWWWを開発していた初期に作成されたプロトコル。1991年にWWWプロジェクトが公開されて世に出た。\n  - GETしか使えない。\n  - HTTPヘッダーがない。\n  - HTMLファイルだけ転送可能。\n  - ステータスやエラーコードがない。\n  - エラー時はエラー文が書かれたHTMLファイルが返送されてた。\n- **HTTP/1**: 1996年に[RFC1945](https://tools.ietf.org/html/rfc1945)で標準化された(開発期間は５年)。実は説明文書としての標準であって、プロダクト自体は標準化されてない。\n  - HTTPヘッダーが爆誕した。この時点でcontent-type指定でHTMLファイル以外の文書を転送できるようになったし、その他様々なメタデータを追加できるので認証系キャッシュ系条件系(リクエスト日によって切り替えるなど)制御系リダイレクト系など柔軟かつ拡張できるようになった。ちなみにこの拡張性のせいで各ブラウザが独自のメタデータをぶちこみまくった(独自系はX-接頭辞が慣習的につく)が、これは2012年6月にRFC標準で非推奨となる。\n  - レスポンスの初めにステータスコード行が追加された。→ブラウザがリクエストの成功失敗を理解できるようになって、クライアント側で対応しやすくなった。\n- **HTTP/1.1**: 案の定カオスと化したHTTP/1を救いたい ---- そんな理由で1997年に[RFC2068](https://tools.ietf.org/html/rfc2068)で標準化された。公開時点でもHTTP1から改良されてるがその後も大きく15年にわたって拡張されてきたので差分は以下の通り。\n  - 通信の高速化&サーバーの負荷減少。Keep-Alive自体は1.0からあったがそれがデフォルトで有効になった。そのため連続リクエストに対して前回接続を再利用させられる(Persistent Connection)。これによりTCPコネクションの開閉が減るので物理的にサーバー、プロクシ、ゲートウェイ、トンネルなどのCPU処理は減りTCPコネクションのプロトコルのコントロールに使用されるメモリも減る。あたりまえだがTCP接続にかかる時間自体減る。あとパイプライニングというレスポンスを待つ前に次のリクエストを送れる(連続可能)技術も入った。またチャンク方式というデータを小分けで送るシステムができたので巨大なデータ送信時にメモリ枯渇することがなくなった。\n  - TLSが暗号化用にサポートされ(HTTPレイヤとは別に)、HTTPSが爆誕した。元々HTTPは解釈できないプロトコルはブロックしてしまうのだが、HTTPレイヤより下のプロトコルであるTLSを通信経路に使うことで最新プロトコル(Websocketとか)を導入できたりする。\n  - 様々なAPIが実装された。2000年にまずはRESTが誕生した。APIアクションは新しいHTTPメソッドを必要としないので、ブラウザやサーバーを更新しないでデーターの取り出しや変更ができるようになった。普及したのはかなり後(2000年後期)だが、もうすでにこの時点でできている。2005年くらいから増えたAPIセット用に新たなHTTPヘッダーが誕生してHTTPプロトコル自体も拡張された(websocketなど)。\n- **HTTP/2.0**: HTTPレイヤ1.1と文法は全く同じなので鯖側は改造不要だがパフォーマンスが上がった。Googleが2010年にSPDYというプロトコルを作り、これが基礎となってHTTP/2.0が2015年に標準化された。\n  - テキスト形式でなくバイナリになった。元々1.1から鯖はリクエストテキストをParseしてバイナリで処理していたが、そのParse処理が消えた。\n  - パイプラインがあまり普及しなかったので、ストリームという技術が爆誕した。リクエストを並行して行えるのでブロッキング制約が消えた。また最初に表示したい優先度などもヘッダーで指定できる(Priority)。\n  - 大体同じだったヘッダーを圧縮した（HPACK）。必要なヘッダの差分のみ取り出して送信できるので高速化。\n  - リクエストより先に、サーバーがクライアントがアクセスできるキャッシュに先にデータを加えられるようになった（サーバープッシュ）。仕組みとしては勿論何を見たいかのリクエストはクライアントから行われるのだが、例えばHTMLをリクエストすると、CSSとJSは別GETでリクエスト必要になるところを、鯖側の指定で1HTMLリクエスト→server pushしたHTML,CSS,JSをまとめてレスポンス、というように１リクエストだけで返す事が定義できる(PUSH_PROMISE。これはストリームのフレームにpriorityと同じ感じで指定できる。)。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_markdown": "# まずHTTPとは\n- ハイパーテキスト転送プロトコルの略\n- アプリケーションレベルのプロトコル\n- ステートレスなプロトコル\n- 分散型の協調型ハイパーメディア情報システム向け。つまりインターネット/WWW向け。\n- デフォルトポートはTCP80\n- パイプライン、ストリームという新技術を例外として、基本的にConnectionlessが仕様。クライアントとサーバーは、現在のリクエスト応答の間のみお互いを認識する。結果的にstatelessである。\n- クライアントとサーバーの両方がデーターコンテンツの処理方法を知っている限り、あらゆるタイプのデータを送信可能(Media Independent)。適切なMIMEタイプを使用して、Content-Typeを指定する必要がある。\n- クライアントは「メソッド、URI、プロトコルバージョン」の形式でサーバーにリクエストする。その後TCP/IP接続’を介して「要求修飾子、クライアント情報」を含むMIMEメッセージを送信する。\n- サーバーは「プロトコルバージョン、成功/失敗コードを含むステータス行」の形式でレスポンスする。その後「サーバー情報、エンティティメタ情報、エンティティ本体コンテンツ」を含むMIMEメッセージを送信する。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_updated_at": "2021-01-25",
+      "body_markdown": "# 主要なHTTPプロトコルパラメータ\n\n## 1. HTTPバージョン\nHTTPメッセージのバージョンは、最初の行のHTTP-Versionフィールドで書く。\n\n```bash\n# Syntax\nHTTP-Version: \"HTTP\" \"/\" 1*DIGIT(major) \".\" 1*DIGIT(minor)\n\n# Example\nHTTP/1.0\nHTTP/1.1\n```\n\n## 2. ユニフォームリソース識別子\nつまりURL = URI（Uniform Resource Identifers）。webのリソースを識別する。注意として「大文字と小文字は区別されない」。\n\n```bash\n# Syntax\nURI: \"http:\" \"//\" host [ \":\" port ] [ abs_path [ \"?\" query ]]\n# ↑portが未指定だとポート80になる。\n\n# Example 以下は全て同値になる。\nhttp://abc.com:80/~smith/home.html\nhttp://ABC.com/%7Esmith/home.html\nhttp://ABC.com:/%7esmith/home.html\n```\n\n## 3. 日付\n全てグリニッジ標準時(GMT)。\n\n```bash\n# Syntax\nDate: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT\n\n# Example\nDate: Sun, 06 Nov 1994 08:49:37 GMT\nDate: Sunday, 06-Nov-94 08:49:37 GMT\nDate: Sun Nov  6 08:49:37 1994\n```\n\nそのほかはこちらRFCの和訳サイトが詳しい。\nhttps://triple-underscore.github.io/rfc-others/RFC2616-ja.html#section-3"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_updated_at": "2021-01-25",
+      "body_markdown": "# HTTPメッセージ (RFC822)\n\n- HTTPはTCP/IP接続を介してメッセージを交換するステートレスな応答プロトコルである。\n- HTTPクライアントは、HTTP要求メッセージを送信する目的でサーバーへの接続を確立するプログラム(Chromeとかがこれにあたる)。\n- HTTPサーバーは、HTTP要求を処理する&HTTP応答メッセージを送信するために接続を許可するプログラム(apacheとかがこれにあたる)。\n- この接続確立時、HTTPはURIを使って特定リソースを識別して、**HTTPメッセージ**と多目的インターネットメール拡張機能(MIME)形式テキストをクライアントとサーバーに渡す。これはRFC2045準拠。\n- 改行は絶対「**CRLF**」。\n\n```bash\n# syntax\n[１行目]リクエスト/ステータス\n[２行目]HTTPヘッダーフィールド。やろうと思えば無の時もある。おおまかに４種あって、General-Header(clientもserverも共通)、Request-Header(clientだけ)、Response-Header(serverだけ)、Entity-Header(本体に関するメタ情報)。\n[３行目]空行。ヘッダーの終わりを意味する\n[４行目]ボディ。htmlだったり。ヘッダーのContent-Type、Content-Lengthと関連している。\n \n# Example\n[１行目]リクエスト/ステータス\nGET /hello.htm HTTP/1.1 (クライアントから)\nHTTP/1.1 200 OK             (サーバーから)\n\n[２行目]HTTPヘッダーフィールド\nUser-Agent: curl/7.16.3 libcurl/7.16.3 OpenSSL/0.9.7l zlib/1.2.3\nHost: www.example.com\nAccept-Language: en, mi\nDate: Mon, 27 Jul 2009 12:28:53 GMT\nServer: Apache\nLast-Modified: Wed, 22 Jul 2009 19:15:56 GMT\nETag: \"34aa387-d-1568eb00\"\nAccept-Ranges: bytes\nContent-Length: 51\nVary: Accept-Encoding\nContent-Type: text/plain\n\n[３行目]空行\n\n[４行目]ボディ\n<html>\n   <body>\n      <h1>犬派です</h1>\n   </body>\n</html>\n\n```\n"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_updated_at": "2021-01-25",
+      "body_markdown": "# HTTPリクエスト\n\nHTTPメッセージの内、リクエストに関するメソッド、ヘッダーを書いていく。\n\n## リクエストメソッド\n- リクエストは、URIで実行されるメソッドを指定しなければならない。\n- 大文字と小文字は区別されるので必ず大文字で記載する。\n\n```\n# 1.1の全メソッド\nGET: 指定したリソースを取得する\nHEAD: 指定したリソースのヘッダ情報だけを取得する\nPOST: 指定したリソースに対してデータを送信する。データは「要求本文」にセットして送信する\nPUT: 指定したリソースに対してデータを送信して置き換える\nDELETE: 指定したリソースを削除する\nCONNECT: 指定されたURIで識別されるサーバーへのトンネルを確率する\nOPTIONS: 利用可能なオプション（メソッド）の一覧を返す\nTRACE: URIの動作診断(ループバックテスト)をするための機能\n```\n\n## リクエストヘッダー(GeneralやResponseは後述)\n- リクエストヘッダーを使うと、クライアントはリクエストに関する追加情報とクライアント自体に関する追加情報をサーバーに渡せる\n\n```\n# 主な例\nAccept: 受信可能なメディアタイプ。HTMLとか。\nAccept-Charset: 受信可能な文字タイプ。\nAccept-Encoding: 受信可能なエンコーディング。gzipとか。\nAccept-Language: 受信可能な言語。Ja-JPとか。\nAuthorization: UAがサーバーから認証をうける為の証明書。サーバーからauthenticateが返された後から使うようになる。\nExpect: 一旦statusを待ち、期待通りなら100を、エラーなら417を送信してサーバー側に処理を分岐させる。100-continueしか今はvalueはない。\nFrom: リクエスト者のemail。何に使うかというとbot使用者が使う。なぜならbotがやりすぎた時にサーバー管理者が連絡できるため。\nHost:  接続先のホスト名\nIf-Match: putメソッド使う時、元のリソースをfetch→誰かが更新した→変更されたのでmatchが弾かれる、というように二重更新を防ぐ事ができる。（でもアプリ側でやるよね・・・とは思う）\nIf-Modified-Since: 指定した日時以降に変更があれば要求を実行。\nIf-Unmodified-Since: 指定した日時以降に変更がなければ要求を実行。\nReferer: 参照元ページのURL情報\nUser-Agent: HTTPクライアント名称やバージョン\n```\n"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_updated_at": "2021-01-25",
+      "body_markdown": "# HTTPレスポンス\nHTTPメッセージの内、レスポンスに関するステータス、ヘッダーを書いていく。\n\n## レスポンスステータスコード\n```\n■1xx\tInformational（補助的な情報の通知）\n100\tContinue : リクエスト継続許可（完了しているなら無視）\n101\tSwitching Protocols : Upgradeリクエストの成功\n■2xx\tSuccessful（成功）\n200\tOK : リクエスト成功\n201  Created : POSTによるファイル生成成功\n202\tAccepted : リクエストは成功したがまだ実行されていない状態。\n203 Non-Authoritative Information : リクエストは成功したが、プロキシによってレスポンスが変換されている状態。Transformation Appliedと似ている。\n204 No Content : リクエストが成功し、レスポンス内容はないが、ヘッダーは有効である状態。\n■3xx\tRedirection（リダイレクト要求されたリソースが移動した場合などに返される\n301\tMoved Permanently（リソースは存在するが、別の場所に恒久的に移動した）。移動先のURI情報は応答のLocationヘッダなどで伝達される。以後はそちらをアクセスすること\n302\tFound（リソースは存在するが、別の場所に存在する）。応答本文で移動先のURI情報などが指示される\n■4xx\tClient Error（クライアント側からの要求に対するエラー）\n400\tBad Request（不正な要求）\n401\tUnauthorized（そのURLは認証されておらずアクセスできない）\n402 Payment Required （これは使われてない。無視しておｋ）\n403\tForbidden（アクセスは禁止されている）。ユーザー認証されればアクセスできる（可能性がある）\n404\tPage Not Found（指定されたリソースが見つからない、もしくはアクセスできない）。応答本文として、エラー時に表示すべきHTMLページの内容が含まれていることがある\n405\tMethod Not Allowed（禁止されているメソッド、もしくはサポートされていないメソッド）\n408\tRequest Timeout（要求全体を受け取る前にタイムアウトした）\n414\tURI Too Long（URIが長過ぎる）\n415\tUnsupported Media Type（サポートされていないメディアタイプ）\n■5xx\tServer Error（サーバ側におけるエラーのために応答できない状態）\n500\tInternal Server Error（サーバの内部エラー）\n501\tNot Implemented（実装されていない機能が要求された）\n502\tBad Gateway（ゲートウェイ／プロキシ指定が不正）\n503\tService Unavailable（サービスは利用できない）\n504 Gateway Timeout （ゲートウェイのタイムアウトエラー）\n505\tHTTP Version Not Supported（サポートされいないHTTPのバージョン）\n```\n\n## レスポンスヘッダー(Generalは後述)\n```\nAccept-Ranges: リクエストでRange指定されている場合、対応している範囲の単位を返す。bytesしかない。\nAge: プロキシのキャッシュに存在してる時間(seconds)\nETag: リソースのバージョンを識別する。IF_MATCHなどで用いられる。\nLocation: ページのリダイレクト先のURL。201/3xx系の時のみ作られる。\nProxy-Authenticate:  プロキシの先へのリソースアクセス時に用いられる認証メソッドを記載する。Basicならbasic。\nRetry-After: 次のリクエストまで、UAがどれだけ待つか秒数で定義。\nServer: サーバーソフトウェア。Apacheなど。\nVary: Cache-Controlの劣化版。キャッシュされたレスポンスを使用できるかどうかを決定する。\n```\n"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_updated_at": "2021-01-25",
+      "body_markdown": "# HTTPヘッダーフィールド\n\n概要説明とリクエストとレスポンスは上述済。\nGeneral-HeaderとEntity-Headerについて記述する。\n\n## General Header\n```\nCache-Control: ブラウザのキャッシュ動作を管理する。ユーザーはブラウザキャッシュからリソースを読むか、またはブラウザがサーバーからリソースをまた要求するか設定できる。そういうリソースはTTL(Time to Live)と呼ばれる一定期間保存される\n- no-cache: 更新されたバージョンがあるかどうか確認してからでないと(Etagを使う)キャッシュを使わない。更新されてない場合はキャッシュを使う。一番安全（zozoが確かこれで昔事故ってた気がする）。\n- no-store: 絶対キャッシュしない。\n- private: ブラウザだけがキャッシュできて、CDNとかプロキシにはキャッシュしない。ユーザー情報系がこれ。\n- max-age = seconds: TTLを指定できる。\n\nConnection: その接続に必要なオプションを定義できる。\n- keep-alive: デフォルト。永続的接続を意味する。\n- close: 応答完了して接続閉じる時。\nPragma: 公式がもう新規Pragmaは追加されない事を明言してる。no-cacheだけ。固有ディレクティブを追加するためだけにあるので気にしなくていい。\nTransfer-Encoding: メッセージボディの変換タイプ。entityであって、content-encodingとは別物。基本的にchunked。\nUpgrade: HTTP1.1がサポートしている別の通信プロトコルを指定できる。基本的に現在はほとんどHTTP/2.0だろう。\nCookie: クッキーの保存値。ここに個人情報入れないように。\n```\n\n## Entity Header\n```\nAllow: 可能なメソッド。optionsで返す値。\nContent-Encoding: コンテンツの符号化。gzipなど指定できる。もしサポートしていない場合は415が帰ってくる。\nContent-Length: 受信者に送信されるエンティティボディのサイズ。\nContent-Range: chunkされたエンティティボディの詳細。bytes 0-499/1234というように、範囲と最大値を返す。\n```"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-25",
+      "body_markdown": "おわり。\n\n# 参考リンク\n\nhttps://developer.mozilla.org/ja/docs/Web/HTTP\n\nhttps://www.cloudflare.com/ja-jp/learning/\n\nhttps://www.oreilly.co.jp/books/9784873118789/"
+    }
+  ]
+}

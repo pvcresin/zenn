@@ -1,0 +1,18 @@
+{
+  "title": "絶対入れてるGithub MarketPlaceやActionめも",
+  "closed": false,
+  "archived": false,
+  "created_at": "2020-12-09",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-09",
+      "body_markdown": "# Imgbot\n\nhttps://github.com/marketplace/imgbot\n\n絶対いれている。画像の最適化を勝手にやってくれてPRを作ってくれる。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-09",
+      "body_markdown": "# alex-page/github-project-automation-plus\n\nhttps://github.com/alex-page/github-project-automation-plus\n\nこれも絶対いれている。issueやPRを勝手にprojectsにアサインしてくれる。\nprojectsにアサイン後はproject自体の機能でautomated."
+    }
+  ]
+}

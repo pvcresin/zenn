@@ -1,0 +1,32 @@
+{
+  "title": "LeetCodeのSQL140本ノックを5日で完走したら結構良かったのでメモ",
+  "closed": false,
+  "archived": false,
+  "created_at": "2020-12-21",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-21",
+      "body_updated_at": "2021-02-11",
+      "body_markdown": "50時間くらいかかりました。5日間完全に寝なかったけどやれば人はできる。\n\nぶっちゃけDMLスムーズに書けない力不足を感じていたので「一度ボコボコにされて鍛えたいなぁ」と思ってたらLeetCodeがとてもいいSQL問題集を抱えていました。\n\nSQL140本ノックはこちら↓。\n\nhttps://leetcode.com/problemset/database/\n\n![](https://storage.googleapis.com/zenn-user-upload/l4thypppmwchncbv2tmeed22nn26)\n\n## 何がいいのか\n同様のサービスにsqlzooとかありますが、leetcodeはもっとすごいです。\n\n![](https://storage.googleapis.com/zenn-user-upload/on7xsyf7v25rx3p14vy43om8mcoj)\n*回答画面*\n\n![](https://storage.googleapis.com/zenn-user-upload/a377wsybygeiq8n4bivoziz14k0r)\n*回答詳細画面*\n\n![](https://storage.googleapis.com/zenn-user-upload/e45znsgllrkls4oq73qynj0d2np3)\n*掲示板画面*\n\n特に掲示板が最高で、「あぁこれってアンチパターンなんや・・・」とか「そんな裏技できるんか・・・」というのをコメント見て気づいたりできます。LeetCodeのサイトの目指してるゴール上、結構ユースケースに近い問題が多くてそれもまた勉強になりました。\n\n注意として有料問題があります。自分は教科書代とおもってお金払いましたが、無料では40問くらいしかないと思います。でも結構十分な気がする。そこで、無料問題の範囲で良い問題をピックアップしてみました。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-21",
+      "body_updated_at": "2020-12-22",
+      "body_markdown": "## 前提知識\n極論前提知識０でもやってるうちに体得してくようにできてるように感じてます（だからこれ、非SQL経験者への研修にめちゃくちゃ使える気がする）。ただ一応知っといたら楽になるんじゃないかという知識は以下の通り。\n\n- 基本的なDML(`select`とか`delete`)。\n- `(inner) join`, `left (outer) join`, `right (outer) join`, `natural join`, `union`, `union all`などのオペレータ。\n- windows functions (`dense_rank() over (partition by id oder by date desc)` とか`avg(cnt) over(order by id rows between current row and 2 following))`とか)。これはMySQL Ver8からの機能なので多用してはいけないが、使える所では練習としてwindows functionでも別解してみるといい気がする。パフォーマンス超絶良いしコード綺麗になる。\n- CTE (`with`とか)。これもMySQL Ver8からの機能だし多用してはいけないが、`with recursive`だけは別。1-100までの連番がほしい時にselect 1 union select ....ってやってたら日が暮れるし。\n- UserDefinedVariable。`inner join (select @cnt:=0)`など。row_numberとかcumulative_sumとかやる時、Windows Functionを使わないなら確実にお世話になるであろう機能。\n- 相関サブクエリは死んでも使わない事。MySQL5.6で自動最適化が入って高速になったが、使ってると周りから「おいｗ」って言われるのでやめましょう。遅いです。[この記事](http://nippondanji.blogspot.com/2009/03/mysql_25.html)が10年前だけど本当に詳しいです。\n\nこのあたりが「あるんだな」って気持ち止めておくと楽になると思います。難易度としては経験者なら大体Easyは1,2分で解けますが、Mediumが下手したら10分、Hardは初見で詰まったら余裕で1,2時間くらいかかったりします。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-21",
+      "body_updated_at": "2020-12-23",
+      "body_markdown": "## 良かった問題\n\n### 1: 各グループのN番目を取得する\n[184. Department Highest Salary](https://leetcode.com/problems/department-highest-salary/)\n\n頻出ユースケース。windows functionを用いると\n\n```sql\nfrom (\n    select name,\n           departmentid,\n           rank() over (partition by departmentid order by salary desc) as r\n    ----\n) as hoge\nwhere r=1\n```\nで簡単に解けてしまいますが、`rank() over (partition by DepartmentId)`を使わずにいかに生SQLで取得できるかが鍵です。また二種類のjoinが必要になるので、基礎知識の復習にもなります。\n\n↓\n\nこれの発展型が[185. Department Top Three Salaries](https://leetcode.com/problems/department-top-three-salaries/)\n\n### 2: rowが連続しているかどうかを検知する\n[601. Human Traffic of Stadium](https://leetcode.com/problems/human-traffic-of-stadium/)\n\n頻出ユースケース。このケースでは3つだけなので、正直joinを２つずつかけてあげれば解けるが、これが例えば100個以上連続してる時でもスマートに解けれないか試してみましょう。\n\nヒントとしてはwindows functionを用いるならば\n```sql\n    id - row_number() over (order by s.id) as grp\nとした上で\n    group by grp\n    having count(grp)>=3\nとすると。。。\n```\n\n### 3: 特定条件の場合のパーセンテージを計算する\n[262. Trips and Users](https://leetcode.com/problems/trips-and-users/)\n\n「特定の日のキャンセル率を計算する」というユースケース。いかに分母と分子をsmartに、かつ相関サブクエリを使わないで答えるかがポイント。\ncountを別々にjoinしてもいいが、実は一発で計算できる方法がある。\n\n### 4: 各スコアのランク付けをする\n[178. Rank Scores](https://leetcode.com/problems/rank-scores/)\n\nwindows functionを使うと一発で解けてしまうのだが、user defined variableと、variableも使わない生SQLの３パターンで解いてみると良さそう。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-21",
+      "body_updated_at": "2020-12-22",
+      "body_markdown": "## Snippet\n\n[mycli](https://github.com/dbcli/mycli)の[Favorite Query](https://www.mycli.net/favorites)記法で一覧していきます。下な感じで使えます（ぶっちゃけ事故る可能性もあるからメモ程度のつもりがいい）。\n![](https://storage.googleapis.com/zenn-user-upload/wa69tq9xxs4nftkecu4q2xq2wbh0 =360x)\n\n### 1: 累積和\n```sql\ncumulativesum = '''\nselect $1,\n       (@csum := @csum + 1) as csum\nfrom $2\ninner join (select @csum:=0) as t\n'''\n```\n\n### めんどくなった\n\nあとはここ見た方が速いと思います。自分のmyclircです。\nhttps://github.com/ulwlu/dotfiles/blob/master/dotfiles/.myclirc"
+    }
+  ]
+}

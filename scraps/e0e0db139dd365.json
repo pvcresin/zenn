@@ -1,0 +1,58 @@
+{
+  "title": "Svelte, Sapper, TypeScript, TailwindCSS, Sass, PostCSS, Rollup + netlify/vercel/gh-pagesでブログを作ったメモ",
+  "closed": false,
+  "archived": false,
+  "created_at": "2021-01-03",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_updated_at": "2021-01-03",
+      "body_markdown": "# 経緯\nSapperの開発終了が決まったので、前に作った[Sapper, Contentful, Netlifyの個人ブログ](https://qiita.com/ulwlu/items/d982c6cbdf3423e22b2c)をSvelte-kitに変えようとした。\n\nで、Svelte-kitのブログを作れたのだが([リポジトリ](https://github.com/ulwlu/ulwlu-blog))、コマンドを死ぬほど掘って調べたあげく`svelte-kit adapt`でSSGを吐ける**予定**であってまだ未完成だったので一旦本番に使うのはやめた。\n\nそんなわけで一旦Sapperに戻り色々リファクタすることにした。完成品は↓\n\nhttps://github.com/ulwlu/blog\n\n- Contentfulは重いのでやめた。あと二段階認証の保存期間が早すぎてログインがめんどい。\n- 色々あったけどTailwindを入れる事にした。なくてもいいけど記法が綺麗。\n- Snowpackはsapperと相性悪くて結構しんどかったので使わない。svelte-kitでは問題なく動いたからsvelte-kitに移行する時はsnowpackにする。\n- 遊びでnetlifyとvercelとgithub-pages全てに自動デプロイするようにした。作った後で思ったけど普通に可用性という意味ではいいのでは？"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_updated_at": "2021-01-03",
+      "body_markdown": "色々便利なtemplateが結構あるが一旦０から\n\n# 1 事前準備\n```bash\nnpx degit \"sveltejs/sapper-template#rollup\" test\ncd test && node scripts/setupTypeScript.js && yarn install\n```\n\n```bash\nyarn add -D \\\n  tailwindcss \\\n  postcss postcss-cli postcss-import postcss-load-config postcss-nested \\\n  cssnano autoprefixer @fullhuman/postcss-purgecss \\\n  eslint eslint-config-airbnb-base eslint-config-prettier eslint-plugin-import eslint-plugin-prettier eslint-plugin-svelte3 @typescript-eslint/eslint-plugin @typescript-eslint/parser \\\n  @types/marked \\\n  node-sass\nyarn add marked\n```"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_updated_at": "2021-01-03",
+      "body_markdown": "# 2 rollup.config.js\npreprocessを定義する。やるのはscssとpostcss。\n\n```javascript\nimport sveltePreprocess from 'svelte-preprocess';\n\nconst preprocess = sveltePreprocess({\n  scss: {\n    includePaths: ['src'],\n  },\n  postcss: true,\n});\n```\n\nclientとserverの両方のplugins.svelteでpreprocessを追記(versionによっては最初からあるかも)。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_markdown": "# 3 postcss.config.js\n\n```js\nmodule.exports = {\n  plugins: [\n    autoprefixer,\n    postcssNested,\n    postcssImport,\n    tailwindCSS(),\n    purgecss,\n    production && cssnano({\n      preset: [\n        'default',\n        {discardComments: {removeAll: true}},\n      ],\n    }),\n  ].filter(Boolean)\n}\n\n```\n\npurgecssだが、tailwindのpurgeがうまいことsvelte専用のclassにマッチしてくれなくって苦しい思いをしたのでいれた。結果的にこっちの方が綺麗だしいいのでは？という気持ちになってる。\n\n```javascript\nconst purgecss = require(\"@fullhuman/postcss-purgecss\")({\n  content: [\"./src/**/*.html\", \"./src/**/*.svelte\"],\n  whitelistPatterns: [/svelte-/],\n  defaultExtractor: (content) => content.match(/[A-Za-z0-9-_:/]+/g) || [],\n})\n```"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_markdown": "# 4 tailwind.config.js\n\n問題のpurgeの部分。\n\n```javascript\nconst { tailwindExtractor } = require(\"tailwindcss/lib/lib/purgeUnusedStyles\");\nmodule.exports = {\n  purge: {\n    content: [ \"./src/**/*.svelte\" ],\n    options: {\n      defaultExtractor: (content) => [\n        ...tailwindExtractor(content),\n        ...[...content.matchAll(/(?:class:)*([\\w\\d-/:%.]+)/gm)].map(([_match, group, ..._rest]) => group),\n      ],\n      keyframes: true,\n    },\n  },\n  theme: {\n    colors: {\n      'light': {\n        'fg': '#333333',\n        'bg': '#F6FAFD',\n        'bg_border': '#EAECEF',\n        'meta': '#586069'\n      },\n      'dark': {\n        'fg': '#C2C2C2',\n        'bg': '#252525',\n        'bg_border': '#4C4C4C',\n        'meta': '#9B9B9B'\n      }\n    },\n    extend: {},\n  },\n  variants: {\n    extend: {\n      tableLayout: ['hover', 'focus'],\n    },\n  },\n  plugins: [],\n  future: {\n    removeDeprecatedGapUtilities: true,\n    purgeLayersByDefault: true,\n  },\n};\n```\n\nこれでいけるはずなんだけどなぁ・・・どうにも再現できなくてbugfix PRも出せず一旦放置した。\nthemeはお好みで、あとでlocalstorageからdark<->light theme切り替える時用に。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_updated_at": "2021-01-03",
+      "body_markdown": "これで用意は整った。何もデフォルトから変えてないがyarn devで何も問題なく動くことを確認しつつ開発する。\n\n### tailwind\ntailwind系はそのまま入れても動くが一旦globalで行いたい時はcomponentsにGlobalStyle.svelteという形でおく。sass記法が使える。\n\n```html\n<style global lang=\"postcss\">\n  @tailwind base;\n  @tailwind components;\n  @tailwind utilities;\n\n  body {\n    @apply text-sm sm:text-lg leading-normal break-all;\n    background: theme('colors.light.bg');\n    color: theme('colors.light.fg');\n    .dark & {\n      background: theme('colors.dark.bg');\n      color: theme('colors.dark.fg');\n    }\n  }\n\n  footer {\n    @apply text-center mt-16;\n    button {\n      @apply border-b border-solid leading-none opacity-50 absolute -right-0;\n    }\n  }\n</style>\n```\n\nこのdarkmode時のあれこれ、tailwindで変数定義した上で`@apply bg-indigo dark:bg-gray`にした方が スマートなのかわからないんだけれども、好みでこうした。アンチパターンかどうかわかったら修正するつもり。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_markdown": "### ブログ部分\n\nContentful、遅いのでもう普通にリポジトリにmarkdownいれてmarkedする事にした。\n```bash\n# 構成\nroutes/\n├── blog/\n│  ├── [slug].json.ts\n│  ├── [slug].svelte\n│  ├── _posts.ts\n│  ├── index.json.ts\n│  └── index.svelte\n├── _error.svelte\n├── _layout.svelte\n└── index.svelte\n```\n\n下記でtitleとpubdateのmetadataと、本文を切り分ける。\n```typescript\nfunction process_markdown(markdown: string) {\n  const match = /---\\r?\\n([\\s\\S]+?)\\r?\\n---/.exec(markdown);\n  const frontMatter = match[1];\n  const content = markdown.slice(match[0].length);\n  const metadata = {} as { title: string, pubdate: string };\n  frontMatter.split('\\n').forEach(pair => {\n    const colonIndex = pair.indexOf(':');\n    metadata[pair.slice(0, colonIndex).trim()] = pair\n      .slice(colonIndex + 1)\n      .trim();\n  });\n  return { content, metadata };\n}\n```\n\nあとはpubdateでsortしたりtitleを出すのみ。json.tsがbuild時にpost一覧となる。\nページングだけ入れてないので後でいれようと思ったりしてます。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_updated_at": "2021-01-03",
+      "body_markdown": "あとはお好みで。よしなに。\n自分は遊びで[localstorage](https://github.com/ulwlu/blog/blob/master/src/localstorage.ts)作ってlight themeとdark themeを切り分けた。\n\n![](https://storage.googleapis.com/zenn-user-upload/f2qpobit1blu0rb18mzpzd6n1qr3)\n\ndark theme作ったのこれが初めてだけど、結構配色気に入ってる。見やすいしお目目に優しい。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_markdown": "忘れてた。\n\n# 7 deploy方法\n\n### netlify\nコンソールで下記設定して連携すれば自動デプロイになる。\n\n```\nBuild command: npm run export\nPublish directory:  __sapper__/export\n```\n\n### vercel\nビルドが面倒だが [vercel-sapper](https://github.com/thgh/vercel-sapper)使えば終わり。\nもしsrc, static以外にディレクトリを設けた場合は、config.includeでパス指定すること。じゃないとビルドが失敗する。\nまたsapperはsrc/node_modulesに依存していてこれはignoreされたら困るので、.vercelignoreには`/node_modules`と書く事。`node_modules`と書くとignoreされる。\n初回`vercel`して連携後は、`vercel --prod`しなくても自動デプロイする。\n\n### github-pages\n[actions-gh-pages](https://github.com/peaceiris/actions-gh-pages)を使えば終わり。\npublish_dirは`__sapper__/export`。"
+    }
+  ]
+}

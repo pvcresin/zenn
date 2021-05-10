@@ -1,0 +1,18 @@
+{
+  "title": "部分和問題やるとき、深さ探索やbit演算より動的計画やった方がスマートだったメモ",
+  "closed": false,
+  "archived": false,
+  "created_at": "2021-01-03",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_markdown": "最初に思いつくのはdfs。\n```python\ndef dfs(i,sum):\n\tif i == len(s):\n\t\treturn sum\n\telif sum + s[i] > 2020:\n\t\treturn dfs(i+1,sum)\n\telse:\n\t\treturn max(dfs(i+1,sum),dfs(i+1,sum+s[i]))\n```\n\n次にbit演算。一番重い。\n```python\nN = len(s)\nans = []\npoint = float('inf')\nfor i in range(1<<N):\n    bit_matched = []\n    for j in range(N):\n        if (i>>j) & 1:\n            bit_matched.append(s[j])\n    current_point = abs(sum(bit_matched) - 2020)\n    if current_point < point:\n        point = current_point\n        ans = bit_matched\nimport math\nprint(math.prod(ans), flush=True)\n```\n\nでもなーと思ってdpでやってみた。これが一番速い\n```python\ndp = [-1 for i in range(2020+1)]\ndp[0]=0\nfor i in s:\n    for j in range(2020,-1,-1):\n        if dp[j]==-1:\n            continue;\n        if j+i<=2020 and dp[j+i]==-1:\n            dp[j+i]=i\n    if dp[2020]!=-1:\n        break;\nresult=[]\ntarget=2020\nwhile target!=0:\n    result.append(dp[target])\n    target = target-dp[target]\nprint(result, flush=True)\n```"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2021-01-03",
+      "body_markdown": "dpでやってるのは、和としてありえるdpを作成して、そこにあてこんでいく\n2020に入ってるのが999だったら、2000-999=1001番目の配列にいく\n1001に入ってるのが500だったら、1001-500-501番目の配列にいく\n501=0だったら、そこで終わり。答えは999,500,501となる。dpに入ってなければskip、という感じで効率化できた。"
+    }
+  ]
+}

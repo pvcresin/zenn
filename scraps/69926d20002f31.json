@@ -1,0 +1,67 @@
+{
+  "title": "使ってるスクリプト群を暇な時にめも",
+  "closed": false,
+  "archived": false,
+  "created_at": "2020-12-04",
+  "comments": [
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-04",
+      "body_updated_at": "2021-04-24",
+      "body_markdown": "人にスクリプトを共有する事がたびたびあり、自分のためにもいつか「 わかりやすい形&追加しやすい形でまとめたいなー 」と思っていたらスクラップがまさにそういう機能だったので決心してまとめることにしました。"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-04",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# VSCodeでインストールしてるプラグインを一括エクスポートし、別パソコンで一括自動インストールする\n\n## ① VSCodeでインストールしてるプラグインを一括エクスポートする\n```bash\ncode --list-extensions > ~/vsplug.txt\n```\n\n## ② ①でエクスポートしたtxtを元に、別パソコンなどで一括自動インストールする\n\n```bash\nplugins=($(cat ~/vsplug.txt))\nfor plugin in ${plugins}; do\n    code --install-extension ${plugin}\ndone\n\n# これはインストールだけでなく、アップデートもしてくれます。\n# なので、すでにこのコマンドを実行してるパソコンでも再度実行すると、\n# 一括アップデートしてくれたりします。\n```\n\n[自分はこういう風に使ってます](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.aliases/base.zsh#L51-L64)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-04",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# 任意の文字列を全検索しつつ、見つけたファイルをfzfで確認しつつエディターで開く\n\n必要ツール: ripgrep, fzf\n\n```bash\nrgf()  {\n\t[ -z \"$2\" ] && matches=`rg \"$1\" -l` || matches=`rg --files | rg \"$1\"`;\n\t[ -z \"${matches}\" ] && echo \"no matches\\n\" && return 0;\n\tselected=`echo \"${matches}\" | fzf --preview \"rg -pn '$1' {}\"`;\n\t[ -z \"${selected}\" ] && echo \"fzf Canceled.\" && return 0;\n\t${EDITOR} \"${selected}\";\n\n        # ${EDITOR}はvimとかvscodeに設定できる\n}\n```\n\n![](https://storage.googleapis.com/zenn-user-upload/m8nsexk8segtie60jyirluzav8le)\n\n↑\nここでファイルをEnterで選択すると、viかvscodeで開けます。\n\n[自分はこういう風に使っています](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.zshrc#L106-L112)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-05",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# 任意の文字列を含むファイルを全検索しつつ、一括全置換する\n\n必要ツール: ripgrep, sd\n\n```bash\nrg \"検索&置換したい文字\" -l | xargs sd \"検索&置換したい文字\" \"置換後になってほしい文字\"\n\n# find . type | xargs grep \"hoge\" | xargs sed \"s/hoge/myaan/g\"\n# とやるより100倍以上パフォーマンスが早いです(公式にベンチマークあり)\n# あと覚えやすいし\n```\n\n![](https://storage.googleapis.com/zenn-user-upload/kp0vt9zacppwu3xw7k2g2sib5y83)\n\n[自分はこういう風に使っています](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.zshrc#L117)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-05",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# 任意の名前を含むファイルを全検索しつつ、ファイル名を一括全置換する\n\n必要ツール: fd, sd\n\n```bash\nfd \"検索対象の文字列\" | xargs rename \"s/置換前の文字/置換後の文字/ if -f;\"\n```\n\n![](https://storage.googleapis.com/zenn-user-upload/r159rjqry0i4gm479hpcwmrbbd7y)\n\n\n[自分はこういう風に使っています](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.zshrc#L116)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-05",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# 高速に特定階層までの容量を視覚的に全て出す\n\n```bash\ndust -pr -d 2\n```\n\n![](https://storage.googleapis.com/zenn-user-upload/omffy9peubgiharumxlm0oe84i9h)\n\n\n[自分はこう使っています。](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.zshrc#L90)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-06",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# とりあえず何でも自動で解凍する\n\n```bash\nextract() {\n    case \"$1\" in\n        *.tar.gz|*.tgz)  tar xzvf   \"$1\";;\n        *.tar.xz)        tar Jxvf   \"$1\";;\n        *.zip)           unzip      \"$1\";;\n        *.lzh)           lha e      \"$1\";;\n        *.tar.bz2|*.tbz) tar xjvf   \"$1\";;\n        *.tar.Z)         tar zxvf   \"$1\";;\n        *.gz)            gzip -d    \"$1\";;\n        *.bz2)           bzip2 -dc  \"$1\";;\n        *.Z)             uncompress \"$1\";;\n        *.tar)           tar xvf    \"$1\";;\n        *.arj)           unarj      \"$1\";;\n    esac\n}\n```\n\n[自分はこう使ってます](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.aliases/base.zsh#L128-L142)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-06",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# Github Releasesから自動で最新ライブラリを一覧しながらダウンロードする\n\n必要ツール: fzf\n\n```bash\ndlgr() {\n    read repo\"?type https://api.github.com/repos/{author}/{repo}/releases/latest : \";\n    URL=`curl -s \"${repo}\" | grep \"browser_download_url\" | cut -d '\"' -f 4 | fzf`\n    curl -sOL ${URL}\n}\n\n# これは#6で紹介した解凍スクリプトと組み合わせるととても便利です\n```\n\n![](https://storage.googleapis.com/zenn-user-upload/ix2m5us3t6p72fvorbiiv90q4soh)\n\n[自分はこうやって使ってます](https://github.com/ulwlu/dotfiles/blob/master/dotfiles/.aliases/base.zsh#L113-L117)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-07",
+      "body_updated_at": "2020-12-09",
+      "body_markdown": "# 一括で特定ディレクトリの中のファイルを、全く同じディレクトリ構成で全てシンボリックリンクにする\n\n```bash\nhandle_symlink_from_file() {\n\tfile=$1\n\tdirpath=$(dirname \"${file}\") && filename=$(basename \"${file}\")\n\tabspath=$(cd \"${dirpath}\" && pwd)\"/${filename}\"\n\trelpath=$(echo \"${file}\" | sed \"s|^\\./dotfiles/||\")\n\ttarget=\"${HOME}/${relpath}\"\n\tmkdir -p \"$(dirname \"${target}\")\"\n\tln -sfnv \"${abspath}\" \"${target}\" > /dev/null\n}\nexport -f handle_symlink_from_file\nfind ./dotfiles \\( -type l -o -type f \\) -exec bash -c 'handle_symlink_from_file \"{}\"' \\;\n\n# この例でいうと、dotfilesというディレクトリ配下のファイルを\n# 全てホームディレクトリにsymlinkしています。\n# これは自分のdotfiles管理法です。\n```\n\n自分の場合はdotfilesの管理法ですが、これは汎用性が高く、例えば\nasset系リポジトリから画像をそのままsymlinkしたい(同じリポジトリでは管理したくない)場合も使えます。\n\nまた例えば特定サーバーのログをローカルの任意のディレクトリにrsyncしたい場合や、\ncsvファイル群を同じディレクトリ構成でschemaに変更して保存しておきたい・・・という場合にも、\n`ln -sfnv...`の部分を書き換えれば大丈夫です。\n\n[自分はこう使っています](https://github.com/ulwlu/dotfiles/blob/master/install.sh#L16-L26)"
+    },
+    {
+      "author": "ulwlu",
+      "created_at": "2020-12-14",
+      "body_markdown": "## SQLファイル群を一括でキレイにする\n\n必要ツール: sql-formatter-cli\n\n```bash\nfor i in $(fd); do\n  sql-formatter-cli -i $i -o $i\ndone\n```\n\n![](https://storage.googleapis.com/zenn-user-upload/wawj0i04ecrudkrvh295t26397l1)\n"
+    }
+  ]
+}
